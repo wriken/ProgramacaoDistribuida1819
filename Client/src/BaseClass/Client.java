@@ -12,10 +12,20 @@ public class Client implements Constants {
     private ObjectOutputStream out;
     private LoginInformation login;
     private FilesInformation files;
+    private ChatMessage lastChatMessage;
 
     public Client(){
         socket = null;
         files = new FilesInformation();
+    }
+
+    public void setLastChatMessage(ChatMessage msg){
+        lastChatMessage = msg;
+    }
+
+    public ChatMessage getLastChatMessage(){
+
+        return lastChatMessage;
     }
 
     public int getPortServer() {

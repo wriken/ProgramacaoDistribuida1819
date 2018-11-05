@@ -30,7 +30,7 @@ public class ClientMainPanel extends JPanel {
 
     public void setupLayout(){
 
-       add(loginPanel);
+       add(connectPanel);
        setBackground(Color.gray);
     }
 }

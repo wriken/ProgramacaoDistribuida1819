@@ -11,6 +11,7 @@ public class ChatThread extends Thread {
     private Socket socket;
     private ObjectInputStream in;
     private ObjectOutputStream out;
+    private ChatMessage msg;
 
     public ChatThread(Client m,Socket s){
         model = m;
@@ -22,13 +23,22 @@ public class ChatThread extends Thread {
         try{
 
             in = new ObjectInputStream(socket.getInputStream());
-            out = new ObjectOutputStream(socket.getOutputStream());
+            //out = new ObjectOutputStream(socket.getOutputStream());
 
             while (true){
                 
+                if(in.readObject() instanceof ChatMessage){
+
+                    msg = (ChatMessage) in.readObject();
+                    model.setLastChatMessage(msg);
+                    //notify listeners;
+
+                }
 
             }
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
 
