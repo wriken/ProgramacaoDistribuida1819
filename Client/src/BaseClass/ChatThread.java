@@ -18,6 +18,14 @@ public class ChatThread extends Thread {
         socket = s;
     }
 
+    @Override
+    public void run() {
+        super.run();
+
+        chat();
+
+    }
+
     public void chat(){
 
         try{

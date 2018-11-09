@@ -11,12 +11,13 @@ public class Client implements Constants {
     private ObjectInputStream in;
     private ObjectOutputStream out;
     private LoginInformation login;
-    private FilesInformation files;
+    private FilesStorageInformation files;
     private ChatMessage lastChatMessage;
+    private ChatMessage sentMessage;
 
     public Client(){
         socket = null;
-        files = new FilesInformation();
+        files = new FilesStorageInformation();
     }
 
     public void setLastChatMessage(ChatMessage msg){
@@ -113,10 +114,11 @@ public class Client implements Constants {
 
     private int downloadFileFromUser() {
 
+        Socket s;
         File localDirectory;
         FileOutputStream localFileOutputStream;
         String localFilePath,fileToDownload;
-        byte [] chunk = new byte[MAX_FILE_SIZE];
+        byte [] fileChunk = new byte[MAX_FILE_SIZE];
         int nbytes;
 
         try{
@@ -131,18 +133,65 @@ public class Client implements Constants {
 
             localFileOutputStream = new FileOutputStream(localFilePath);
 
-
+            //Sends information to server -> filename
             out.writeObject(fileToDownload);
 
-            while ((nbytes = in.read(chunk)) > 0){
-                localFileOutputStream.write(chunk, 0, nbytes);
+            if(in.readObject() instanceof Integer){
+
+                Integer res = (Integer)in.readObject();
+
+                switch(res){
+                    case ERROR_NOSUCH_FILENAME_ON_SERVER: System.out.println("No such filename on server");break;
+                }
+
+                return res;
+            }
+
+            else if(in.readObject() instanceof ClientSocketInformation){
+
+               ClientSocketInformation userInformation = (ClientSocketInformation) in.readObject();
+
+               s = new Socket(userInformation.getIp(),userInformation.getPort());
+               s.setSoTimeout(TIMEOUT);
+
+                //Receive from socket
+                InputStream input = socket.getInputStream();
+                //Send to socket
+                PrintWriter output = new PrintWriter(s.getOutputStream(),true);
+                output.println(fileToDownload);
+                output.flush();
+
+                while((nbytes = input.read(fileChunk)) > 0){
+                    localFileOutputStream.write(fileChunk, 0, nbytes);
+                }
+
+                //Check if file is valid...
+                File file = new File(localFilePath);
+                if(file.length() == userInformation.getFileSize()) {
+                    s.close();
+                    input.close();
+                    output.close();
+                    return FILE_DOWNLOADED_SUCCESSFULLY;
+                }
+                else{
+                    System.out.println("Error on downloaded file");
+                    if(file.delete())
+                        System.out.println("File successfully deleted");
+                    else
+                        System.out.println("Error on deleting file from directory");
+                }
+
+
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            return EXCEPTION_ERROR_CONSTANT;
+        } catch (ClassNotFoundException e) {
+            System.out.println("Class not found received from server");
+            return EXCEPTION_ERROR_CONSTANT;
         }
 
-        return FILE_DOWNLOADED_SUCCESSFULLY;
+        return ERROR_FILE_DOWNLOAD;
     }
 
 
@@ -154,5 +203,23 @@ public class Client implements Constants {
         }
     }
 
+
+    public boolean sendMessageGlobal(String message){
+
+        sentMessage = new ChatMessage(login.getUsername(),message);
+
+
+        try {
+            out.writeObject(sentMessage);
+        } catch (IOException e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public void sendMessageToUser(String message,String user){
+
+    }
 
 }
