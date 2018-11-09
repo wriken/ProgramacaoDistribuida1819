@@ -2,16 +2,17 @@ import javax.sound.midi.SoundbankResource;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.sql.*;
+import java.util.Scanner;
 
 public class Server {
 
     public static final int SERVICE_PORT = 6000;
-    static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-    static final String DB_URL = "jdbc:mysql://35.189.228.42:3306/programacaodistribuida?useSSL=false";
-
+    MySQL ms;
 
 
     public static void runServidor() {
@@ -19,7 +20,6 @@ public class Server {
         try {
             ServerSocket server = new ServerSocket(SERVICE_PORT);
             System.out.println("Servidor a correr...");
-            conectaBD();
 
             while(true){
 
@@ -54,46 +54,87 @@ public class Server {
         }
     }
 
+    public void showFiles(){
 
-    public static void conectaBD() throws ClassNotFoundException {
+        Scanner scanner = new Scanner(System.in);
 
+        System.out.println("Introduza o nome do ficheiro: ");
+        String filename = scanner.nextLine();
+        ms.getFilePath(filename);
+    }
 
-        Class.forName("com.mysql.jdbc.Driver");
-        System.out.println("Connecting to database...");
+    public  void addFile(){
 
+        ms.newFile(, , , , , );
+    }
+
+    public void addUser(){
+
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Introduza o username: ");
+        String user = scanner.nextLine();
+        System.out.println("Introduza a password: ");
+        String password = scanner.nextLine();
 
         try {
-            Connection conn = DriverManager.getConnection(DB_URL,"macgab","macgab123");
-            Statement stmt = conn.createStatement();
-
-
-            String sql;
-            //sql = "SELECT * FROM users_list WHERE ip = 1";
-            sql = "SELECT id,name FROM users";
-            ResultSet rs = stmt.executeQuery(sql);
-            System.out.println("Conexção estabelecida com a Base de Dados!");
-
-
-            while(rs.next()){
-                int id = rs.getInt("id");
-                String name = rs.getString("name");
-
-                System.out.println("ID:" + id);
-                System.out.println("Nome: " + name);
-            }
-        } catch (SQLException e) {
+            ms.newUser(user, password, InetAddress.getLocalHost().getHostAddress(), 1);
+        } catch (UnknownHostException e) {
             e.printStackTrace();
         }
     }
 
+    public void deleteUser(){
 
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Introduza o username a eliminar: ");
+        String username = scanner.nextLine();
+        ms.deleteUserByUsername(username);
+    }
+
+    public void serverOptions(){
+
+        int option = 0;
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("1 - Listar Utilizadores");
+        System.out.println("2 - Listar Ficheiros");
+        System.out.println("3 - Listar Ficheiros por Diretoria");
+        System.out.println("4 - Adicionar Ficheiro");
+        System.out.println("5 - Adicionar Utilizador");
+        System.out.println("6 - Eliminar Utilizador");
+        System.out.println("7 - Sair");
+        option = scanner.nextInt();
+
+
+        switch (option){
+
+
+            case 1: ms.getUsersList(); break;
+
+            case 2: ms.getFiles(); break;
+
+            case 3: showFiles(); break;
+
+            case 4: addFile(); break;
+
+            case 5: addUser(); break;
+
+            case 6: deleteUser(); break;
+
+            case 7: System.exit(0);
+
+            default: System.out.println("Opção Inválida!");
+
+        }
+    }
 
 
     public static void main(String[] args) {
 
 
         runServidor();
-
     }
 }
 
